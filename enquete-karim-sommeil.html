@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enquête : la nuit de Karim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
+  :root{
+    --bg:#F6F3EC; --paper:#FFFFFF; --ink:#1B2340; --ink-soft:#4A5170;
+    --night:#3C4A8C; --night-dark:#2A3566; --moon:#E8B84B; --moon-soft:#F3D98B;
+    --good:#3F8F5F; --good-bg:#E7F3EB; --bad:#B85450; --bad-bg:#FBEAE9;
+    --line:#DEDACD; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(circle at 85% 8%, rgba(232,184,75,0.16), transparent 45%), var(--bg);
+    color:var(--ink); font-family:'Atkinson Hyperlegible', Arial, sans-serif;
+    font-size:17px; line-height:1.55; min-height:100vh;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:28px 20px 60px;}
+  header.top{display:flex; align-items:center; gap:16px; margin-bottom:22px;}
+  header.top .moon-icon{width:44px;height:44px;flex:none;border-radius:50%;
+    background:linear-gradient(135deg, var(--moon), var(--moon-soft));
+    box-shadow: inset -6px -6px 0 rgba(27,35,64,0.12);}
+  header.top h1{font-family:'Fraunces', serif; font-weight:700; font-size:1.5rem; margin:0; color:var(--night-dark);}
+  header.top p{margin:2px 0 0; color:var(--ink-soft); font-size:0.95rem;}
+
+  .case-box{background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--moon);
+    border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin-bottom:22px;}
+  .case-box strong{display:block; margin-bottom:4px; font-family:'Fraunces',serif; font-weight:500; color:var(--night-dark);}
+
+  .carnet{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 18px; margin-bottom:26px; display:flex; gap:10px; flex-wrap:wrap;}
+  .carnet .etape{flex:1 1 120px; min-width:110px; text-align:center; padding:8px 4px; border-radius:10px;
+    font-size:0.82rem; font-weight:700; color:var(--ink-soft); background:#F1EFE7;
+    border:1px dashed var(--line); transition:all .25s ease;}
+  .carnet .etape.active{background:var(--night); color:#fff; border-style:solid;}
+  .carnet .etape.done{background:var(--good-bg); color:var(--good); border-color:var(--good); border-style:solid;}
+
+  .panel{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px 26px 22px; box-shadow:0 2px 0 var(--line); position:relative;}
+  .panel::before{content:""; position:absolute; top:-1px; left:26px; width:46px; height:14px;
+    background:var(--moon-soft); border-radius:0 0 6px 6px; opacity:.9;}
+
+  .eyebrow{text-transform:uppercase; letter-spacing:.08em; font-size:0.78rem; font-weight:700;
+    color:var(--night); margin:0 0 6px;}
+  .panel h2{font-family:'Fraunces', serif; font-size:1.3rem; margin:0 0 12px; color:var(--ink);}
+  .clue{background:#F9F7F1; border-left:4px solid var(--moon); padding:14px 16px;
+    border-radius:0 10px 10px 0; margin-bottom:18px;}
+  .clue-label{text-transform:uppercase; letter-spacing:.06em; font-size:0.75rem; font-weight:700;
+    color:#8A6D1D; margin-bottom:8px;}
+  .train-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:0.85rem; margin-top:10px; color:var(--ink-soft);}
+  .train-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .train-legend i{width:13px; height:13px; border-radius:3px; display:inline-block;}
+  .question{font-weight:700; margin-bottom:14px;}
+
+  .options{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .opt-btn{text-align:left; padding:13px 16px; border-radius:10px; border:2px solid var(--line);
+    background:#fff; font-family:inherit; font-size:1rem; color:var(--ink); cursor:pointer;
+    transition:border-color .15s, background .15s;}
+  .opt-btn:hover{border-color:var(--night);}
+  .opt-btn:focus-visible{outline:3px solid var(--night); outline-offset:2px;}
+  .opt-btn.correct{border-color:var(--good); background:var(--good-bg);}
+  .opt-btn.incorrect{border-color:var(--bad); background:var(--bad-bg);}
+  .opt-btn[disabled]{cursor:default;}
+
+  .feedback{padding:12px 14px; border-radius:10px; font-size:0.95rem; margin-bottom:14px; display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:var(--good-bg); color:var(--good); border:1px solid var(--good);}
+  .feedback.ko{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad);}
+
+  .actions{display:flex; justify-content:flex-end; gap:10px;}
+  .btn{font-family:inherit; font-weight:700; font-size:0.95rem; padding:11px 22px; border-radius:999px; border:none; cursor:pointer;}
+  .btn-primary{background:var(--night); color:#fff;}
+  .btn-primary:disabled{background:#C7CBE0; cursor:not-allowed;}
+  .btn-primary:hover:not(:disabled){background:var(--night-dark);}
+  .btn-ghost{background:transparent; color:var(--night); border:2px solid var(--night);}
+
+  .final-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0;}
+  .final-card{background:#F9F7F1; border:1px solid var(--line); border-radius:10px; padding:14px; text-align:center;}
+  .final-card strong{display:block; color:var(--night); font-family:'Fraunces',serif; font-size:1.05rem;}
+
+  .check-opt{display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:2px solid var(--line);
+    border-radius:10px; margin-bottom:8px; cursor:pointer;}
+  .check-opt:hover{border-color:var(--night);}
+  .check-opt input{margin-top:3px; width:18px; height:18px;}
+
+  @media (max-width:600px){ .panel{padding:20px 16px;} header.top h1{font-size:1.25rem;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="moon-icon" aria-hidden="true"></div>
+    <div>
+      <h1>Enquête : la nuit de Karim</h1>
+      <p>PSE — Rythmes biologiques et sommeil · CAP</p>
+    </div>
+  </header>
+
+  <div class="case-box">
+    <strong>Le cas : Karim, 19 ans, apprenti en restauration</strong>
+    Depuis trois semaines, son établissement lui demande de faire les fermetures : il termine son
+    service à 1h du matin puis reprend certains matins à 7h pour la mise en place. Il se sent de plus
+    en plus fatigué, fait des erreurs en cuisine et s'endort parfois dans le bus.
+  </div>
+
+  <div class="carnet" id="carnet"></div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+const trainSVG = `<svg viewBox="0 0 680 190" style="width:100%;height:auto;" role="img" aria-label="Schéma du train du sommeil : une locomotive représentant l'endormissement suivie de trois wagons représentant le sommeil léger, le sommeil profond et le sommeil paradoxal, puis un second train pour le cycle suivant.">
+<rect x="0" y="150" width="680" height="4" fill="#C7C2AF"/>
+<g transform="translate(10,60)">
+  <rect x="0" y="30" width="55" height="55" rx="8" fill="#5F5E5A"/>
+  <rect x="10" y="10" width="35" height="30" rx="6" fill="#5F5E5A"/>
+  <rect x="15" y="0" width="8" height="14" fill="#5F5E5A"/>
+  <circle cx="14" cy="90" r="10" fill="#2C2C2A"/>
+  <circle cx="41" cy="90" r="10" fill="#2C2C2A"/>
+  <text x="27" y="112" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Endorm.</text>
+</g>
+<g transform="translate(80,70)">
+  <rect x="0" y="20" width="80" height="45" rx="8" fill="#F3D98B"/>
+  <circle cx="18" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="62" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="40" y="12" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Léger</text>
+</g>
+<g transform="translate(170,70)">
+  <rect x="0" y="10" width="80" height="55" rx="8" fill="#3C4A8C"/>
+  <circle cx="18" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="62" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="40" y="0" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Profond</text>
+</g>
+<g transform="translate(260,70)">
+  <rect x="0" y="20" width="80" height="45" rx="8" fill="#E8935A"/>
+  <circle cx="18" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="62" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="40" y="12" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Paradoxal</text>
+</g>
+<g font-family="Atkinson Hyperlegible, Arial" font-size="11" fill="#8A867A">
+  <circle cx="365" cy="112" r="3"/><circle cx="378" cy="112" r="3"/><circle cx="391" cy="112" r="3"/>
+  <text x="400" y="80" font-size="10">micro-</text>
+  <text x="400" y="94" font-size="10">réveil</text>
+</g>
+<g transform="translate(420,60)">
+  <rect x="0" y="30" width="55" height="55" rx="8" fill="#5F5E5A"/>
+  <rect x="10" y="10" width="35" height="30" rx="6" fill="#5F5E5A"/>
+  <rect x="15" y="0" width="8" height="14" fill="#5F5E5A"/>
+  <circle cx="14" cy="90" r="10" fill="#2C2C2A"/>
+  <circle cx="41" cy="90" r="10" fill="#2C2C2A"/>
+</g>
+<g transform="translate(490,70)">
+  <rect x="0" y="20" width="60" height="45" rx="8" fill="#F3D98B"/>
+  <circle cx="14" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="46" cy="78" r="9" fill="#2C2C2A"/>
+</g>
+<g transform="translate(555,70)">
+  <rect x="0" y="10" width="60" height="55" rx="8" fill="#3C4A8C"/>
+  <circle cx="14" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="46" cy="78" r="9" fill="#2C2C2A"/>
+</g>
+<text x="10" y="185" font-size="11" fill="#8A867A" font-family="Atkinson Hyperlegible, Arial">1er train (1er cycle)</text>
+<text x="420" y="185" font-size="11" fill="#8A867A" font-family="Atkinson Hyperlegible, Arial">2e train (cycle suivant)</text>
+</svg>`;
+
+const stages = [
+  {
+    id:"rythme", label:"Rythmes",
+    render: () => `
+      <p class="eyebrow">Étape 1 · Identifier — C2</p>
+      <h2>Un rythme biologique perturbé</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Le corps humain possède une horloge biologique, située dans le cerveau, qui règle nos fonctions
+      sur environ 24 heures : c'est le <strong>rythme circadien</strong>, qui gouverne l'alternance
+      veille-sommeil. Il existe aussi des <strong>rythmes ultradiens</strong>, qui se répètent
+      plusieurs fois par jour, comme le rythme cardiaque. Le soir, quand la lumière baisse, le cerveau
+      sécrète une hormone appelée <strong>mélatonine</strong>, qui déclenche l'endormissement.</div>
+      <p class="question">D'après ce document, le cycle veille-sommeil de Karim correspond à quel type de rythme ?</p>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" id="nextBtn" onclick="nextStage()" disabled>Continuer</button></div>
+    `,
+    options:[
+      {text:"Un rythme ultradien", correct:false, explain:"Relisez le document : le rythme ultradien se répète plusieurs fois en 24h, ce n'est pas le cas de l'alternance veille-sommeil."},
+      {text:"Un rythme circadien, calé sur 24 heures", correct:true, explain:"Exact : le document précise que le rythme circadien gouverne l'alternance veille-sommeil sur environ 24 heures."},
+      {text:"Un rythme social imposé par le travail", correct:false, explain:"Relisez le document : les horaires de travail sont un facteur externe, pas le rythme biologique lui-même."}
+    ]
+  },
+  {
+    id:"facteurs", label:"Facteurs",
+    render: () => `
+      <p class="eyebrow">Étape 2 · Repérer — C3</p>
+      <h2>Ce qui perturbe l'horloge de Karim</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      L'horloge biologique peut se dérégler : on parle de <strong>désynchronisation</strong>. Plusieurs
+      éléments peuvent en être la cause : le travail de nuit ou les horaires décalés, l'exposition à
+      la lumière des écrans en soirée, le stress lié au rythme de travail, la consommation
+      d'excitants (café, énergisants) le soir, ou encore le décalage horaire lors d'un voyage.</div>
+      <p class="question">D'après ce document, cochez ce qui peut expliquer la désynchronisation de Karim (plusieurs réponses possibles).</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Le travail de nuit / les horaires décalés", correct:true},
+      {text:"L'exposition à la lumière des écrans tard le soir", correct:true},
+      {text:"Le fait de manger des légumes le midi", correct:false},
+      {text:"Le stress lié au rythme de travail", correct:true},
+      {text:"La couleur de son uniforme de cuisine", correct:false}
+    ]
+  },
+  {
+    id:"phases", label:"Phases",
+    render: () => `
+      <p class="eyebrow">Étape 3 · Analyser — C3</p>
+      <h2>Le train du sommeil</h2>
+      <div class="clue">
+        <div class="clue-label">Document à lire</div>
+        Une nuit de sommeil peut se représenter comme une succession de trains : chaque train est un
+        cycle d'environ 90 minutes, la locomotive représente l'endormissement, et chaque wagon une
+        phase. Entre deux trains, un bref micro-réveil peut survenir.
+        ${trainSVG}
+        <div class="train-legend">
+          <span><i style="background:#F3D98B"></i>Léger : assoupissement, réveil facile</span>
+          <span><i style="background:#3C4A8C"></i>Profond : récupération physique</span>
+          <span><i style="background:#E8935A"></i>Paradoxal : rêves, récupération mentale</span>
+        </div>
+      </div>
+      <p class="question">D'après ce schéma, cochez les affirmations vraies sur les phases du sommeil de Karim.</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Le wagon jaune (sommeil lent léger) est la phase d'endormissement facilement interrompue", correct:true},
+      {text:"Le wagon bleu (sommeil lent profond) assure la récupération physique", correct:true},
+      {text:"Le wagon orange (sommeil paradoxal) est la phase où apparaissent les rêves", correct:true},
+      {text:"Le wagon orange assure surtout la récupération physique", correct:false},
+      {text:"Un seul train passe pendant toute la nuit", correct:false}
+    ]
+  },
+  {
+    id:"consequences", label:"Risques",
+    render: () => `
+      <p class="eyebrow">Étape 4 · Relier — C4</p>
+      <h2>Ce que risque Karim</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Un salarié désynchronisé, qui rate certains trains de sommeil, accumule de la fatigue et voit sa
+      <strong>vigilance diminuer</strong>. Sur le lieu de travail, cela se traduit par un risque plus
+      élevé d'<strong>erreurs et d'accidents</strong>, en particulier sur des postes qui demandent de
+      l'attention (manipulation d'outils tranchants, sources de chaleur). Le corps ne s'adapte que
+      très lentement et partiellement à un rythme décalé.</div>
+      <p class="question">D'après ce document, quelle conséquence professionnelle directe peut-on relier à la désynchronisation de Karim ?</p>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" id="nextBtn" onclick="nextStage()" disabled>Continuer</button></div>
+    `,
+    options:[
+      {text:"Un risque accru d'erreurs et d'accidents au poste de travail", correct:true, explain:"Exact : le document le confirme, en lien direct avec ce que vit déjà Karim en cuisine."},
+      {text:"Une amélioration de sa concentration en horaires décalés", correct:false, explain:"Relisez le document : la vigilance diminue, elle ne s'améliore pas."},
+      {text:"Aucun effet, le corps s'adapte toujours après quelques jours", correct:false, explain:"Relisez le document : l'adaptation est décrite comme lente et partielle."}
+    ]
+  },
+  {
+    id:"prevention", label:"Prévention",
+    render: () => `
+      <p class="eyebrow">Étape 5 · Proposer — C5</p>
+      <h2>Aider Karim à mieux dormir</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Pour limiter les effets d'un rythme décalé, plusieurs mesures individuelles sont recommandées :
+      éviter les écrans juste avant le coucher, privilégier une activité calme en rentrant, se coucher
+      et se lever à des horaires aussi réguliers que possible, dormir dans une pièce fraîche et
+      obscure, et éviter les excitants avant le repos.</div>
+      <p class="question">D'après ce document, cochez les mesures qui pourraient réellement aider Karim.</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Éviter les écrans juste avant de se coucher", correct:true},
+      {text:"Se coucher et se lever à des horaires aussi réguliers que possible", correct:true},
+      {text:"Boire un café juste avant sa sieste de récupération", correct:false},
+      {text:"Privilégier une activité calme en rentrant du service du soir", correct:true},
+      {text:"Dormir avec la lumière allumée pour ne pas rater son réveil", correct:false}
+    ]
+  },
+  {
+    id:"droit", label:"Le droit",
+    render: () => `
+      <p class="eyebrow">Étape 6 · Argumenter — C6</p>
+      <h2>Ce que dit la réglementation</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Le Code du travail protège les salariés : entre deux journées de travail, chaque salarié a droit
+      à un <strong>repos quotidien minimal de 11 heures consécutives</strong>. Les salariés qui
+      travaillent régulièrement de nuit bénéficient en plus d'un suivi médical renforcé.</div>
+      <p class="question">D'après ce document, entre deux services, Karim a droit à un repos quotidien minimum de :</p>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" id="nextBtn" onclick="nextStage()" disabled>Voir la synthèse</button></div>
+    `,
+    options:[
+      {text:"8 heures", correct:false, explain:"Relisez le document : la durée minimale légale est plus longue."},
+      {text:"11 heures", correct:true, explain:"Exact : le document l'indique. Entre 1h et 7h, Karim ne bénéficie donc pas de ce repos minimal."},
+      {text:"24 heures", correct:false, explain:"Relisez le document : 24h correspond plutôt au repos hebdomadaire, pas au repos quotidien."}
+    ]
+  }
+];
+
+let current = 0;
+const results = {};
+
+function renderCarnet(){
+  const el = document.getElementById('carnet');
+  el.innerHTML = stages.map((s,i)=>{
+    let cls='etape';
+    if(i<current) cls+=' done';
+    else if(i===current) cls+=' active';
+    return `<div class="${cls}">${s.label}</div>`;
+  }).join('');
+}
+
+function renderStage(){
+  renderCarnet();
+  const stage = stages[current];
+  document.getElementById('panel').innerHTML = stage.render();
+
+  if(stage.options){
+    const optsEl = document.getElementById('opts');
+    optsEl.innerHTML = stage.options.map((o,i)=>
+      `<button class="opt-btn" onclick="chooseOption(${i})">${o.text}</button>`
+    ).join('');
+  }
+  if(stage.checks){
+    const checksEl = document.getElementById('checks');
+    checksEl.innerHTML = stage.checks.map((c,i)=>
+      `<label class="check-opt"><input type="checkbox" id="chk${i}"> <span>${c.text}</span></label>`
+    ).join('');
+  }
+}
+
+function chooseOption(i){
+  const stage = stages[current];
+  const buttons = document.querySelectorAll('#opts .opt-btn');
+  buttons.forEach(b=>b.disabled=true);
+  const chosen = stage.options[i];
+  buttons[i].classList.add(chosen.correct ? 'correct':'incorrect');
+  if(!chosen.correct){
+    const correctIdx = stage.options.findIndex(o=>o.correct);
+    buttons[correctIdx].classList.add('correct');
+  }
+  const fb = document.getElementById('fb');
+  fb.textContent = chosen.explain;
+  fb.className = 'feedback show ' + (chosen.correct ? 'ok':'ko');
+  results[stage.id] = chosen.correct;
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function validateChecks(){
+  const stage = stages[current];
+  let allCorrect = true;
+  stage.checks.forEach((c,i)=>{
+    const input = document.getElementById('chk'+i);
+    input.disabled = true;
+    const label = input.closest('.check-opt');
+    const isChecked = input.checked;
+    if(isChecked === c.correct){
+      if(c.correct){ label.style.borderColor='var(--good)'; label.style.background='var(--good-bg)'; }
+    } else {
+      allCorrect = false;
+      label.style.borderColor='var(--bad)';
+      label.style.background='var(--bad-bg)';
+    }
+    if(c.correct && !isChecked){ label.style.borderColor='var(--good)'; }
+  });
+  const fb = document.getElementById('fb');
+  fb.textContent = allCorrect
+    ? "Bonnes réponses : vous avez identifié les bons éléments."
+    : "Regardez les cases en vert : ce sont les bonnes réponses attendues.";
+  fb.className = 'feedback show ' + (allCorrect ? 'ok':'ko');
+  results[stage.id] = allCorrect;
+
+  const btn = document.querySelector('.actions .btn-primary');
+  btn.textContent = current === stages.length-1 ? "Voir la synthèse" : "Continuer";
+  btn.onclick = nextStage;
+  btn.disabled = false;
+}
+
+function nextStage(){
+  current++;
+  if(current >= stages.length){ renderFinal(); } else { renderStage(); }
+}
+
+function renderFinal(){
+  renderCarnet();
+  const validated = Object.values(results).filter(Boolean).length;
+  const total = Object.keys(results).length;
+  document.getElementById('panel').innerHTML = `
+    <p class="eyebrow">Synthèse de l'enquête</p>
+    <h2>Le carnet de Karim est complet</h2>
+    <p>Vous avez lu les documents, identifié la situation de Karim, analysé les causes et les
+    conséquences de sa désynchronisation, et proposé des mesures de prévention adaptées à son métier.</p>
+    <p><strong>${validated} / ${total}</strong> étapes validées du premier coup.</p>
+    <div class="final-grid">
+      <div class="final-card"><strong>C2</strong>Identifier un rythme biologique</div>
+      <div class="final-card"><strong>C3</strong>Repérer les facteurs et cycles</div>
+      <div class="final-card"><strong>C4</strong>Relier causes / conséquences</div>
+      <div class="final-card"><strong>C5</strong>Proposer des mesures</div>
+      <div class="final-card"><strong>C6</strong>Argumenter un droit</div>
+    </div>
+    <div class="actions"><button class="btn btn-ghost" onclick="restart()">Recommencer l'enquête</button></div>
+  `;
+}
+
+function restart(){
+  current = 0;
+  for(const k in results) delete results[k];
+  renderStage();
+}
+
+renderStage();
+</script>
+</body>
+</html>
