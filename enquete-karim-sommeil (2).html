@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enquête : la nuit de Karim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+
+  :root{
+    --bg:#F6F3EC; --paper:#FFFFFF; --ink:#1B2340; --ink-soft:#4A5170;
+    --night:#3C4A8C; --night-dark:#2A3566; --moon:#E8B84B; --moon-soft:#F3D98B;
+    --good:#3F8F5F; --good-bg:#E7F3EB; --bad:#B85450; --bad-bg:#FBEAE9;
+    --line:#DEDACD; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(circle at 85% 8%, rgba(232,184,75,0.16), transparent 45%), var(--bg);
+    color:var(--ink); font-family:'Atkinson Hyperlegible', Arial, sans-serif;
+    font-size:17px; line-height:1.55; min-height:100vh;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:28px 20px 60px;}
+  header.top{display:flex; align-items:center; gap:16px; margin-bottom:22px;}
+  header.top .moon-icon{width:44px;height:44px;flex:none;border-radius:50%;
+    background:linear-gradient(135deg, var(--moon), var(--moon-soft));
+    box-shadow: inset -6px -6px 0 rgba(27,35,64,0.12);}
+  header.top h1{font-family:'Fraunces', serif; font-weight:700; font-size:1.5rem; margin:0; color:var(--night-dark);}
+  header.top p{margin:2px 0 0; color:var(--ink-soft); font-size:0.95rem;}
+
+  .case-box{background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--moon);
+    border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin-bottom:22px;}
+  .case-box strong{display:block; margin-bottom:4px; font-family:'Fraunces',serif; font-weight:500; color:var(--night-dark);}
+
+  .carnet{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 18px; margin-bottom:26px; display:flex; gap:10px; flex-wrap:wrap;}
+  .carnet .etape{flex:1 1 120px; min-width:110px; text-align:center; padding:8px 4px; border-radius:10px;
+    font-size:0.82rem; font-weight:700; color:var(--ink-soft); background:#F1EFE7;
+    border:1px dashed var(--line); transition:all .25s ease;}
+  .carnet .etape.active{background:var(--night); color:#fff; border-style:solid;}
+  .carnet .etape.done{background:var(--good-bg); color:var(--good); border-color:var(--good); border-style:solid;}
+
+  .panel{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px 26px 22px; box-shadow:0 2px 0 var(--line); position:relative;}
+  .panel::before{content:""; position:absolute; top:-1px; left:26px; width:46px; height:14px;
+    background:var(--moon-soft); border-radius:0 0 6px 6px; opacity:.9;}
+
+  .eyebrow{text-transform:uppercase; letter-spacing:.08em; font-size:0.78rem; font-weight:700;
+    color:var(--night); margin:0 0 6px;}
+  .panel h2{font-family:'Fraunces', serif; font-size:1.3rem; margin:0 0 12px; color:var(--ink);}
+  .clue{background:#F9F7F1; border-left:4px solid var(--moon); padding:14px 16px;
+    border-radius:0 10px 10px 0; margin-bottom:18px;}
+  .clue-label{text-transform:uppercase; letter-spacing:.06em; font-size:0.75rem; font-weight:700;
+    color:#8A6D1D; margin-bottom:8px;}
+  .train-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:0.85rem; margin-top:10px; color:var(--ink-soft);}
+  .train-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .train-legend i{width:13px; height:13px; border-radius:3px; display:inline-block;}
+  .question{font-weight:700; margin-bottom:14px;}
+
+  .options{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .opt-btn{text-align:left; padding:13px 16px; border-radius:10px; border:2px solid var(--line);
+    background:#fff; font-family:inherit; font-size:1rem; color:var(--ink); cursor:pointer;
+    transition:border-color .15s, background .15s;}
+  .opt-btn:hover{border-color:var(--night);}
+  .opt-btn:focus-visible{outline:3px solid var(--night); outline-offset:2px;}
+  .opt-btn.correct{border-color:var(--good); background:var(--good-bg);}
+  .opt-btn.incorrect{border-color:var(--bad); background:var(--bad-bg);}
+  .opt-btn[disabled]{cursor:default;}
+
+  .feedback{padding:12px 14px; border-radius:10px; font-size:0.95rem; margin-bottom:14px; display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:var(--good-bg); color:var(--good); border:1px solid var(--good);}
+  .feedback.ko{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad);}
+
+  .actions{display:flex; justify-content:flex-end; gap:10px;}
+  .btn{font-family:inherit; font-weight:700; font-size:0.95rem; padding:11px 22px; border-radius:999px; border:none; cursor:pointer;}
+  .btn-primary{background:var(--night); color:#fff;}
+  .btn-primary:disabled{background:#C7CBE0; cursor:not-allowed;}
+  .btn-primary:hover:not(:disabled){background:var(--night-dark);}
+  .btn-ghost{background:transparent; color:var(--night); border:2px solid var(--night);}
+
+  .final-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0;}
+  .final-card{background:#F9F7F1; border:1px solid var(--line); border-radius:10px; padding:14px; text-align:center;}
+  .final-card strong{display:block; color:var(--night); font-family:'Fraunces',serif; font-size:1.05rem;}
+
+  .check-opt{display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:2px solid var(--line);
+    border-radius:10px; margin-bottom:8px; cursor:pointer;}
+  .check-opt:hover{border-color:var(--night);}
+  .check-opt input{margin-top:3px; width:18px; height:18px;}
+
+  @media (max-width:600px){ .panel{padding:20px 16px;} header.top h1{font-size:1.25rem;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="moon-icon" aria-hidden="true"></div>
+    <div>
+      <h1>Enquête : la nuit de Karim</h1>
+      <p>PSE — Rythmes biologiques et sommeil · CAP</p>
+    </div>
+  </header>
+
+  <div class="case-box">
+    <strong>Le cas : Karim, 19 ans, apprenti en restauration</strong>
+    Depuis trois semaines, son établissement lui demande de faire les fermetures : il termine son
+    service à 1h du matin puis reprend certains matins à 7h pour la mise en place. Il se sent de plus
+    en plus fatigué, fait des erreurs en cuisine et s'endort parfois dans le bus.
+  </div>
+
+  <div class="carnet" id="carnet"></div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+const trainSVG = `<svg viewBox="0 0 700 190" style="width:100%;height:auto;" role="img" aria-label="Schéma du train du sommeil : une locomotive représentant l'endormissement suivie de quatre wagons représentant le sommeil lent léger, le sommeil lent profond, le sommeil lent très profond et le sommeil paradoxal.">
+<rect x="0" y="150" width="700" height="4" fill="#C7C2AF"/>
+<g transform="translate(6,60)">
+  <rect x="0" y="30" width="50" height="55" rx="8" fill="#5F5E5A"/>
+  <rect x="8" y="10" width="32" height="30" rx="6" fill="#5F5E5A"/>
+  <rect x="13" y="0" width="7" height="14" fill="#5F5E5A"/>
+  <circle cx="13" cy="90" r="9" fill="#2C2C2A"/>
+  <circle cx="37" cy="90" r="9" fill="#2C2C2A"/>
+  <text x="25" y="112" text-anchor="middle" font-size="10" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Endorm.</text>
+</g>
+<g transform="translate(66,70)">
+  <rect x="0" y="20" width="128" height="45" rx="8" fill="#F3D98B"/>
+  <circle cx="20" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="108" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="64" y="12" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Lent léger</text>
+</g>
+<g transform="translate(204,70)">
+  <rect x="0" y="15" width="128" height="50" rx="8" fill="#8C9BC8"/>
+  <circle cx="20" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="108" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="64" y="5" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Lent profond</text>
+</g>
+<g transform="translate(342,70)">
+  <rect x="0" y="8" width="128" height="57" rx="8" fill="#3C4A8C"/>
+  <circle cx="20" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="108" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="64" y="-2" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Lent très profond</text>
+</g>
+<g transform="translate(480,70)">
+  <rect x="0" y="20" width="128" height="45" rx="8" fill="#E8935A"/>
+  <circle cx="20" cy="78" r="9" fill="#2C2C2A"/>
+  <circle cx="108" cy="78" r="9" fill="#2C2C2A"/>
+  <text x="64" y="12" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Paradoxal</text>
+</g>
+<g font-family="Atkinson Hyperlegible, Arial" font-size="11" fill="#8A867A">
+  <circle cx="625" cy="112" r="3"/><circle cx="638" cy="112" r="3"/><circle cx="651" cy="112" r="3"/>
+</g>
+<text x="565" y="185" font-size="10" fill="#8A867A" font-family="Atkinson Hyperlegible, Arial">↻ micro-réveil, nouveau train</text>
+</svg>`;
+
+const horlogeSVG = `<svg viewBox="0 0 840 500" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;" role="img" aria-label="Schéma de l'horloge biologique : la lumière du jour et l'absence de lumière le soir informent le cerveau, qui règle la sécrétion de mélatonine ; courbe du taux de mélatonine sur 24 heures, faible le jour et très forte la nuit.">
+<defs>
+  <marker id="arrowOrange" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#F2A93B"/></marker>
+  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#5A6EC7"/></marker>
+  <marker id="arrowBrown" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5C4630"/></marker>
+</defs>
+
+
+  <rect x="20" y="20" width="120" height="120" rx="6" fill="#CFE6F7" stroke="#8A867A" stroke-width="2"/>
+  <line x1="20" y1="80" x2="140" y2="80" stroke="#8A867A" stroke-width="2"/>
+  <line x1="80" y1="20" x2="80" y2="140" stroke="#8A867A" stroke-width="2"/>
+  <circle cx="80" cy="74" r="18" fill="#F2A93B"/>
+      <g stroke="#F2A93B" stroke-width="3" stroke-linecap="round">
+        <line x1="80" y1="38" x2="80" y2="48"/>
+        <line x1="80" y1="122" x2="80" y2="132"/>
+        <line x1="38" y1="74" x2="48" y2="74"/>
+        <line x1="122" y1="74" x2="112" y2="74"/>
+      </g>
+      <circle cx="50" cy="50" r="12" fill="#EAF3FB"/>
+      <circle cx="112" cy="60" r="9" fill="#EAF3FB"/>
+  
+
+  <rect x="700" y="20" width="120" height="120" rx="6" fill="#1C2340" stroke="#8A867A" stroke-width="2"/>
+  <line x1="700" y1="80" x2="820" y2="80" stroke="#8A867A" stroke-width="2"/>
+  <line x1="760" y1="20" x2="760" y2="140" stroke="#8A867A" stroke-width="2"/>
+  <path d="M 778 50 A 22 22 0 1 0 778 94 A 15 15 0 1 1 778 50 Z" fill="#F5E6A8"/>
+      <g fill="#F5E6A8">
+        <circle cx="734" cy="52" r="2.5"/>
+        <circle cx="726" cy="75" r="2"/>
+        <circle cx="740" cy="90" r="2.5"/>
+        <circle cx="720" cy="100" r="1.8"/>
+      </g>
+  
+
+  <path d="M 402 150
+           L 402 120
+           Q 364 114 362 78
+           Q 360 46 386 28
+           Q 412 12 440 24
+           Q 452 30 450 42
+           Q 464 46 462 60
+           Q 460 70 450 70
+           Q 456 84 444 94
+           L 446 120
+           Q 446 136 428 142
+           L 428 150 Z"
+        fill="#F4CBAE" stroke="#B8896A" stroke-width="2.2" stroke-linejoin="round"/>
+  <circle cx="440" cy="50" r="2.2" fill="#5C4630"/>
+  <circle cx="410" cy="80" r="34" fill="#FCF3D9" stroke="#E8B84B" stroke-width="4"/>
+  <circle cx="410" cy="80" r="2.5" fill="#4A5170"/>
+  <line x1="410" y1="80" x2="410" y2="60" stroke="#4A5170" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="410" y1="80" x2="425" y2="88" stroke="#4A5170" stroke-width="2.5" stroke-linecap="round"/>
+  
+<line x1="145" y1="80" x2="345" y2="80" stroke="#F2A93B" stroke-width="4" marker-end="url(#arrowOrange)"/>
+<line x1="695" y1="80" x2="475" y2="80" stroke="#5A6EC7" stroke-width="4" marker-end="url(#arrowBlue)"/>
+<text x="245" y="70" text-anchor="middle" font-size="10.5" font-style="italic" fill="#8A6D1D" font-family="Atkinson Hyperlegible, Arial">signal envoyé</text>
+<text x="585" y="70" text-anchor="middle" font-size="10.5" font-style="italic" fill="#3B4A8C" font-family="Atkinson Hyperlegible, Arial">signal envoyé</text>
+<text x="80" y="158" text-anchor="middle" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Facteur extérieur :</text>
+<text x="80" y="174" text-anchor="middle" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">la lumière du jour</text>
+<text x="760" y="158" text-anchor="middle" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Facteur extérieur :</text>
+<text x="760" y="174" text-anchor="middle" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">l'absence de lumière</text>
+<rect x="255" y="140" width="330" height="70" rx="10" fill="#FFFFFF" stroke="#DEDACD" stroke-width="2"/>
+<text x="420" y="163" text-anchor="middle" font-size="12.5" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">L'horloge biologique reçoit le signal lumineux</text>
+<text x="420" y="182" text-anchor="middle" font-size="12.5" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">et règle la sécrétion de <tspan font-weight="700" fill="#8A6D1D">mélatonine</tspan>.</text>
+
+<g transform="translate(0,15)">
+
+<rect x="110" y="260" width="325.41666666666663" height="170" fill="#FBF0C4"/>
+<rect x="435.41666666666663" y="260" width="384.58333333333337" height="170" fill="#2C3560"/>
+<path d="M 110.0 423.8 C 119.9 423.8, 149.4 423.8, 169.2 423.8 C 188.9 423.8, 208.6 423.8, 228.3 423.8 C 248.1 423.8, 267.8 423.8, 287.5 423.8 C 307.2 423.8, 326.9 424.3, 346.7 423.8 C 366.4 423.3, 391.0 423.3, 405.8 420.7 C 420.6 418.1, 428.0 413.2, 435.4 408.3 C 442.8 403.4, 445.3 398.5, 450.2 391.3 C 455.1 384.0, 460.1 373.4, 465.0 364.9 C 469.9 356.4, 474.9 347.9, 479.8 340.1 C 484.7 332.4, 487.2 325.4, 494.6 318.4 C 502.0 311.4, 514.3 303.4, 524.2 298.3 C 534.0 293.1, 543.9 290.0, 553.8 287.4 C 563.6 284.8, 573.5 283.3, 583.3 282.8 C 593.2 282.2, 603.1 282.5, 612.9 284.3 C 622.8 286.1, 632.6 288.7, 642.5 293.6 C 652.4 298.5, 662.2 306.0, 672.1 313.8 C 681.9 321.5, 691.8 331.1, 701.7 340.1 C 711.5 349.1, 721.4 359.2, 731.3 368.0 C 741.1 376.8, 751.0 385.6, 760.8 392.8 C 770.7 400.0, 780.6 406.5, 790.4 411.4 C 800.3 416.3, 815.1 420.4, 820.0 422.3  L 820 430 L 110 430 Z" fill="#5AA9DB" fill-opacity="0.55"/>
+<path d="M 110.0 423.8 C 119.9 423.8, 149.4 423.8, 169.2 423.8 C 188.9 423.8, 208.6 423.8, 228.3 423.8 C 248.1 423.8, 267.8 423.8, 287.5 423.8 C 307.2 423.8, 326.9 424.3, 346.7 423.8 C 366.4 423.3, 391.0 423.3, 405.8 420.7 C 420.6 418.1, 428.0 413.2, 435.4 408.3 C 442.8 403.4, 445.3 398.5, 450.2 391.3 C 455.1 384.0, 460.1 373.4, 465.0 364.9 C 469.9 356.4, 474.9 347.9, 479.8 340.1 C 484.7 332.4, 487.2 325.4, 494.6 318.4 C 502.0 311.4, 514.3 303.4, 524.2 298.3 C 534.0 293.1, 543.9 290.0, 553.8 287.4 C 563.6 284.8, 573.5 283.3, 583.3 282.8 C 593.2 282.2, 603.1 282.5, 612.9 284.3 C 622.8 286.1, 632.6 288.7, 642.5 293.6 C 652.4 298.5, 662.2 306.0, 672.1 313.8 C 681.9 321.5, 691.8 331.1, 701.7 340.1 C 711.5 349.1, 721.4 359.2, 731.3 368.0 C 741.1 376.8, 751.0 385.6, 760.8 392.8 C 770.7 400.0, 780.6 406.5, 790.4 411.4 C 800.3 416.3, 815.1 420.4, 820.0 422.3 " stroke="#2D6FA3" stroke-width="3" fill="none"/>
+<line x1="110" y1="430" x2="820" y2="430" stroke="#8A867A" stroke-width="1.5"/>
+<text x="110.0" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">8h</text>
+<text x="169.2" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">10h</text>
+<text x="228.3" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">12h</text>
+<text x="287.5" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">14h</text>
+<text x="346.7" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">16h</text>
+<text x="405.8" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">18h</text>
+<text x="465.0" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">20h</text>
+<text x="524.2" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">22h</text>
+<text x="583.3" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">24h</text>
+<text x="642.5" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">2h</text>
+<text x="701.7" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">4h</text>
+<text x="760.8" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">6h</text>
+<text x="820.0" y="452" text-anchor="middle" font-size="12" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">8h</text>
+<circle cx="150" cy="290" r="16" fill="#F2A93B"/>
+<g fill="none" stroke="#F2A93B" stroke-width="2.5" stroke-linecap="round">
+  <line x1="150" y1="263" x2="150" y2="271"/>
+  <line x1="150" y1="317" x2="150" y2="309"/>
+  <line x1="122" y1="290" x2="130" y2="290"/>
+  <line x1="170" y1="290" x2="178" y2="290"/>
+</g>
+<path d="M 490.41666666666663 277 A 14 14 0 1 0 490.41666666666663 303 A 10 10 0 1 1 490.41666666666663 277 Z" fill="#F5E6A8"/>
+<text x="145" y="345" font-size="13" font-weight="700" fill="#5C4A12" font-family="Atkinson Hyperlegible, Arial">Pas de production</text>
+<text x="165" y="363" font-size="13" font-weight="700" fill="#5C4A12" font-family="Atkinson Hyperlegible, Arial">de mélatonine</text>
+<text x="525.4166666666666" y="345" font-size="13" font-weight="700" fill="#EDEFFA" font-family="Atkinson Hyperlegible, Arial">Très forte production</text>
+<text x="555.4166666666666" y="363" font-size="13" font-weight="700" fill="#EDEFFA" font-family="Atkinson Hyperlegible, Arial">de mélatonine</text>
+<text x="110" y="247" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Taux de mélatonine</text>
+<path d="M 340 403 Q 410 365 462 333" stroke="#5C4630" stroke-width="1.8" fill="none" marker-end="url(#arrowBrown)"/>
+<text x="260" y="403" font-size="12" font-weight="700" font-style="italic" fill="#5C4630" font-family="Atkinson Hyperlegible, Arial">la courbe monte</text>
+<text x="260" y="419" font-size="12" font-weight="700" font-style="italic" fill="#5C4630" font-family="Atkinson Hyperlegible, Arial">= de plus en plus</text>
+<text x="260" y="435" font-size="12" font-weight="700" font-style="italic" fill="#5C4630" font-family="Atkinson Hyperlegible, Arial">de mélatonine</text>
+
+</g>
+<line x1="10" y1="480" x2="830" y2="480" stroke="#C7862F" stroke-width="3"/>
+<text x="420" y="497" text-anchor="middle" font-size="13" font-weight="700" fill="#C7862F" font-family="Atkinson Hyperlegible, Arial">Cycle de 24 heures</text>
+</svg>`;
+
+const cycleSVG = `<svg viewBox="0 0 700 430" style="width:100%;max-width:520px;height:auto;display:block;margin:0 auto;" role="img" aria-label="Schéma circulaire du cycle du sommeil en 6 étapes formant une boucle : endormissement, sommeil lent léger, sommeil lent profond, sommeil lent très profond, sommeil paradoxal, latence, puis retour à l'endormissement.">
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+    <path d="M0,0 L8,4 L0,8 Z" fill="#C7862F"/>
+  </marker>
+</defs>
+<line x1="393.3" y1="75.0" x2="440.9" y2="102.5" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/><line x1="484.2" y1="177.5" x2="484.2" y2="232.5" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/><line x1="440.9" y1="307.5" x2="393.3" y2="335.0" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/><line x1="306.7" y1="335.0" x2="259.1" y2="307.5" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/><line x1="215.8" y1="232.5" x2="215.8" y2="177.5" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/><line x1="259.1" y1="102.5" x2="306.7" y2="75.0" stroke="#C7862F" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+  <circle cx="350" cy="50" r="46" fill="#9AA0B8" fill-opacity="0.18" stroke="#9AA0B8" stroke-width="2.5"/>
+  <circle cx="350" cy="20" r="16" fill="#fff" stroke="#9AA0B8" stroke-width="1.5"/>
+  <path d="M 337 20 Q 350 27 363 20" stroke="#4A5170" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <text x="350" y="58" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Endormissement</text>
+  
+  
+
+  <circle cx="484.2" cy="127.5" r="46" fill="#F3D98B" fill-opacity="0.18" stroke="#F3D98B" stroke-width="2.5"/>
+  <circle cx="484.2" cy="97.5" r="16" fill="#fff" stroke="#F3D98B" stroke-width="1.5"/>
+  <path d="M 490.2 86.5 A 11 11 0 1 0 490.2 108.5 A 8.5 8.5 0 1 1 490.2 86.5 Z" fill="#8A6D1D"/>
+  <text x="484.2" y="135.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Lent léger</text>
+  
+  
+
+  <circle cx="484.2" cy="282.5" r="46" fill="#8C9BC8" fill-opacity="0.18" stroke="#8C9BC8" stroke-width="2.5"/>
+  <circle cx="484.2" cy="252.5" r="16" fill="#fff" stroke="#8C9BC8" stroke-width="1.5"/>
+  <path d="M 487.2 240.5 A 12 12 0 1 0 487.2 264.5 A 7 7 0 1 1 487.2 240.5 Z" fill="#2C3560"/>
+  <text x="484.2" y="290.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Lent profond</text>
+  
+  
+
+  <circle cx="350" cy="360" r="46" fill="#3C4A8C" fill-opacity="0.18" stroke="#3C4A8C" stroke-width="2.5"/>
+  <circle cx="350" cy="330" r="16" fill="#fff" stroke="#3C4A8C" stroke-width="1.5"/>
+  <circle cx="350" cy="330" r="12" fill="#1B2140"/>
+  <text x="350" y="368" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Lent très</text>
+  <text x="350" y="382" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">profond</text>
+  
+
+  <circle cx="215.8" cy="282.5" r="46" fill="#E8935A" fill-opacity="0.18" stroke="#E8935A" stroke-width="2.5"/>
+  <circle cx="215.8" cy="252.5" r="16" fill="#fff" stroke="#E8935A" stroke-width="1.5"/>
+  <path d="M 202.8 252.5 Q 209.3 243.5 215.8 252.5 Q 222.3 261.5 228.8 252.5" stroke="#8A3E10" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <text x="215.8" y="290.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Paradoxal</text>
+  
+  
+
+  <circle cx="215.8" cy="127.5" r="46" fill="#B7C99A" fill-opacity="0.18" stroke="#B7C99A" stroke-width="2.5"/>
+  <circle cx="215.8" cy="97.5" r="16" fill="#fff" stroke="#B7C99A" stroke-width="1.5"/>
+  <path d="M 202.8 97.5 Q 215.8 88.5 228.8 97.5 Q 215.8 106.5 202.8 97.5 Z" stroke="#4A5170" stroke-width="2" fill="#fff"/><circle cx="215.8" cy="97.5" r="3.5" fill="#4A5170"/>
+  <text x="215.8" y="135.5" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2C2C2A" font-family="Atkinson Hyperlegible, Arial">Latence</text>
+  
+  
+<g transform="translate(350,205)">
+  <rect x="-38" y="-16" width="76" height="32" rx="8" fill="#FFFFFF" stroke="#DEDACD" stroke-width="1.5"/>
+  <text x="0" y="-2" text-anchor="middle" font-size="11" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">1 cycle</text>
+  <text x="0" y="12" text-anchor="middle" font-size="11" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">≈ 90 min</text>
+</g>
+</svg>`;
+
+const busSVG = `<svg viewBox="0 0 600 300" style="width:100%;max-width:480px;height:auto;display:block;margin:0 auto;" role="img" aria-label="Illustration de Karim somnolent, la tête appuyée contre la vitre d'un bus tôt le matin, les yeux fermés, avec des Z symbolisant l'endormissement.">
+<rect x="0" y="0" width="600" height="300" rx="16" fill="#DCE8F2"/>
+<rect x="20" y="20" width="220" height="160" rx="10" fill="#AFCBE0"/>
+<rect x="30" y="30" width="200" height="140" rx="6" fill="#EAF3FA"/>
+<g opacity="0.5">
+  <rect x="40" y="120" width="30" height="40" fill="#9FB6A8"/>
+  <rect x="90" y="100" width="24" height="60" fill="#8FA6C4"/>
+  <rect x="130" y="130" width="40" height="30" fill="#9FB6A8"/>
+  <circle cx="190" cy="70" r="16" fill="#F2D98B"/>
+</g>
+<rect x="20" y="20" width="220" height="160" rx="10" fill="none" stroke="#7C93A8" stroke-width="6"/>
+<line x1="130" y1="26" x2="130" y2="174" stroke="#7C93A8" stroke-width="4"/>
+
+<rect x="270" y="190" width="310" height="60" rx="10" fill="#C7A27A"/>
+<rect x="270" y="150" width="70" height="70" rx="10" fill="#C7A27A"/>
+
+<g transform="translate(300,95)">
+  <ellipse cx="0" cy="95" rx="46" ry="20" fill="#3C4A8C"/>
+  <path d="M -34 55 Q -40 20 -10 0 Q 15 -14 34 8 Q 46 22 40 50 L 40 95 L -34 95 Z" fill="#3C4A8C"/>
+  <circle cx="6" cy="-6" r="40" fill="#F4CBAE"/>
+  <path d="M -34 -10 Q -20 -38 10 -36 Q 40 -34 40 -6 Q 42 4 34 8 Q 30 -18 6 -22 Q -16 -24 -26 -4 Q -32 4 -34 -10 Z" fill="#6B4A34"/>
+  <path d="M -14 -2 Q -8 4 -2 -2" stroke="#5C4630" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M 14 -2 Q 20 4 26 -2" stroke="#5C4630" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="-16" cy="4" rx="6" ry="3" fill="#D89A82" opacity="0.6"/>
+  <ellipse cx="24" cy="4" rx="6" ry="3" fill="#D89A82" opacity="0.6"/>
+  <path d="M -6 20 Q 6 26 18 20" stroke="#6B4A34" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</g>
+
+<g font-family="Atkinson Hyperlegible, Arial" fill="#4A5170" font-weight="700">
+  <text x="330" y="30" font-size="20">Z</text>
+  <text x="352" y="14" font-size="16">z</text>
+  <text x="368" y="4" font-size="12">z</text>
+</g>
+
+<g transform="translate(500,50)">
+  <circle cx="0" cy="0" r="30" fill="#FCF3D9" stroke="#E8B84B" stroke-width="4"/>
+  <line x1="0" y1="0" x2="0" y2="-16" stroke="#4A5170" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="0" y1="0" x2="12" y2="8" stroke="#4A5170" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="0" y="48" text-anchor="middle" font-size="13" font-weight="700" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">6h50</text>
+</g>
+<text x="300" y="285" text-anchor="middle" font-size="13" fill="#4A5170" font-family="Atkinson Hyperlegible, Arial">Karim, sur le trajet vers son travail</text>
+</svg>`;
+
+const stages = [
+  {
+    id:"rythme", label:"Rythmes",
+    render: () => `
+      <p class="eyebrow">Étape 1 · Identifier — C2</p>
+      <h2>Un rythme biologique perturbé</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Le corps humain possède une horloge biologique, située dans le cerveau, qui règle nos fonctions
+      sur environ 24 heures : c'est le <strong>rythme circadien</strong>, qui gouverne l'alternance
+      veille-sommeil. Il existe aussi des <strong>rythmes ultradiens</strong>, qui se répètent
+      plusieurs fois par jour, comme le rythme cardiaque. Le soir, quand la lumière baisse, le cerveau
+      sécrète une hormone appelée <strong>mélatonine</strong>, qui déclenche l'endormissement.</div>
+      <div class="clue" style="margin-top:16px;">
+        <div class="clue-label">Doc. A — L'horloge biologique et la mélatonine</div>
+        ${horlogeSVG}
+      </div>
+      <p class="question">D'après ce document, le cycle veille-sommeil de Karim correspond à quel type de rythme ?</p>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="fb"></div>
+      <div id="q2block" style="display:none; margin-top:18px;">
+        <p class="question">Et d'après le schéma, que se passe-t-il quand la lumière baisse le soir ?</p>
+        <div class="options" id="opts2"></div>
+        <div class="feedback" id="fb2"></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" id="nextBtn" onclick="nextStage()" disabled>Continuer</button></div>
+    `,
+    options:[
+      {text:"Un rythme ultradien", correct:false, explain:"Relisez le document : le rythme ultradien se répète plusieurs fois en 24h, ce n'est pas le cas de l'alternance veille-sommeil."},
+      {text:"Un rythme circadien, calé sur 24 heures", correct:true, explain:"Exact : le document précise que le rythme circadien gouverne l'alternance veille-sommeil sur environ 24 heures."},
+      {text:"Un rythme social imposé par le travail", correct:false, explain:"Relisez le document : les horaires de travail sont un facteur externe, pas le rythme biologique lui-même."}
+    ],
+    options2:[
+      {text:"Le cerveau arrête de sécréter de la mélatonine", correct:false, explain:"Relisez le schéma : c'est l'inverse, la sécrétion de mélatonine commence/augmente quand la lumière baisse."},
+      {text:"Le cerveau sécrète de la mélatonine, ce qui déclenche l'endormissement", correct:true, explain:"Exact : le schéma montre que l'absence de lumière déclenche la sécrétion de mélatonine, qui prépare l'endormissement."},
+      {text:"Le corps produit de la mélatonine uniquement s'il fait froid", correct:false, explain:"Relisez le schéma : c'est la lumière (ou son absence) qui déclenche la sécrétion, pas la température."}
+    ]
+  },
+  {
+    id:"facteurs", label:"Facteurs",
+    render: () => `
+      <p class="eyebrow">Étape 2 · Repérer — C3</p>
+      <h2>Ce qui perturbe l'horloge de Karim</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      L'horloge biologique peut se dérégler : on parle de <strong>désynchronisation</strong>. Plusieurs
+      éléments peuvent en être la cause : le travail de nuit ou les horaires décalés, l'exposition à
+      la lumière des écrans en soirée, le stress lié au rythme de travail, la consommation
+      d'excitants (café, énergisants) le soir, ou encore le décalage horaire lors d'un voyage.</div>
+      <p class="question">D'après ce document, cochez ce qui peut expliquer la désynchronisation de Karim (plusieurs réponses possibles).</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Le travail de nuit / les horaires décalés", correct:true},
+      {text:"L'exposition à la lumière des écrans tard le soir", correct:true},
+      {text:"Le fait de manger des légumes le midi", correct:false},
+      {text:"Le stress lié au rythme de travail", correct:true},
+      {text:"La couleur de son uniforme de cuisine", correct:false}
+    ]
+  },
+  {
+    id:"phases", label:"Phases",
+    render: () => `
+      <p class="eyebrow">Étape 3 · Analyser — C3</p>
+      <h2>Le train du sommeil</h2>
+      <div class="clue">
+        <div class="clue-label">Document à lire</div>
+        Une nuit de sommeil peut se représenter comme un train : la locomotive représente
+        l'endormissement, et chaque wagon une phase du cycle, d'une durée totale d'environ 90 minutes.
+        Un bref micro-réveil peut survenir avant que le train suivant ne démarre.
+        ${trainSVG}
+        <div class="train-legend">
+          <span><i style="background:#F3D98B"></i>Lent léger : assoupissement, réveil facile</span>
+          <span><i style="background:#8C9BC8"></i>Lent profond : étape intermédiaire vers le sommeil très profond</span>
+          <span><i style="background:#3C4A8C"></i>Lent très profond : récupération physique</span>
+          <span><i style="background:#E8935A"></i>Paradoxal : rêves, récupération mentale</span>
+        </div>
+      </div>
+      <div class="clue" style="margin-top:16px;">
+        <div class="clue-label">Vue d'ensemble : la boucle complète d'un cycle</div>
+        <p style="margin:8px 0 4px;">Ce schéma reprend les mêmes phases, en montrant qu'elles s'enchaînent en boucle toute la nuit (4 à 6 fois) :</p>
+        ${cycleSVG}
+      </div>
+      <p class="question">D'après ce schéma, cochez les affirmations vraies sur les phases du sommeil de Karim.</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Le wagon jaune (sommeil lent léger) est la phase d'endormissement facilement interrompue", correct:true},
+      {text:"Le wagon bleu foncé (sommeil lent très profond) assure la récupération physique", correct:true},
+      {text:"Le wagon orange (sommeil paradoxal) est la phase où apparaissent les rêves", correct:true},
+      {text:"Le sommeil lent profond et le sommeil lent très profond sont une seule et même phase", correct:false},
+      {text:"Un seul train (cycle) passe pendant toute la nuit", correct:false}
+    ]
+  },
+  {
+    id:"consequences", label:"Risques",
+    render: () => `
+      <p class="eyebrow">Étape 4 · Relier — C4</p>
+      <h2>Ce que risque Karim</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Un salarié désynchronisé, qui accumule une dette de sommeil, s'expose à des risques à plusieurs
+      niveaux :
+      <ul style="margin:10px 0 0 20px; padding:0;">
+        <li><strong>Vigilance et sécurité</strong> : baisse de la concentration, risque accru d'erreurs
+        et d'accidents au travail (outils tranchants, sources de chaleur), et somnolence dans les
+        transports ou au volant.</li>
+        <li><strong>Santé physique</strong> : système immunitaire affaibli (rhumes, infections plus
+        fréquentes), troubles digestifs, prise de poids, et à terme risque cardiovasculaire
+        (hypertension).</li>
+        <li><strong>État psychologique</strong> : irritabilité, sautes d'humeur, et à long terme risque
+        accru d'anxiété.</li>
+        <li><strong>Vie sociale et professionnelle</strong> : difficultés de mémorisation et
+        d'apprentissage, tensions avec les collègues ou la famille, absentéisme.</li>
+      </ul>
+      Le corps ne s'adapte que très lentement et partiellement à un rythme décalé.</div>
+      <div class="clue" style="margin-top:16px;">
+        <div class="clue-label">Karim, ce matin</div>
+        ${busSVG}
+      </div>
+      <p class="question">D'après ce document, cochez les risques réellement liés au manque de sommeil de Karim (plusieurs réponses possibles).</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Une baisse de vigilance pouvant provoquer des erreurs ou des accidents", correct:true},
+      {text:"Un système immunitaire affaibli (rhumes, infections plus fréquentes)", correct:true},
+      {text:"Une meilleure mémorisation des gestes professionnels", correct:false},
+      {text:"De l'irritabilité et des tensions avec les collègues ou la famille", correct:true},
+      {text:"Un risque de somnolence dans les transports, comme dans le bus", correct:true},
+      {text:"Aucun risque si la fatigue reste occasionnelle", correct:false}
+    ]
+  },
+  {
+    id:"prevention", label:"Prévention",
+    render: () => `
+      <p class="eyebrow">Étape 5 · Proposer — C5</p>
+      <h2>Aider Karim à mieux dormir</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Pour limiter les effets d'un rythme décalé, plusieurs mesures individuelles sont recommandées :
+      éviter les écrans juste avant le coucher, privilégier une activité calme en rentrant, se coucher
+      et se lever à des horaires aussi réguliers que possible, dormir dans une pièce fraîche et
+      obscure, et éviter les excitants avant le repos.</div>
+      <p class="question">D'après ce document, cochez les mesures qui pourraient réellement aider Karim.</p>
+      <div id="checks"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" onclick="validateChecks()">Valider mes réponses</button></div>
+    `,
+    checks:[
+      {text:"Éviter les écrans juste avant de se coucher", correct:true},
+      {text:"Se coucher et se lever à des horaires aussi réguliers que possible", correct:true},
+      {text:"Boire un café juste avant sa sieste de récupération", correct:false},
+      {text:"Privilégier une activité calme en rentrant du service du soir", correct:true},
+      {text:"Dormir avec la lumière allumée pour ne pas rater son réveil", correct:false}
+    ]
+  },
+  {
+    id:"droit", label:"Le droit",
+    render: () => `
+      <p class="eyebrow">Étape 6 · Argumenter — C6</p>
+      <h2>Ce que dit la réglementation</h2>
+      <div class="clue"><div class="clue-label">Document à lire</div>
+      Le Code du travail protège les salariés : entre deux journées de travail, chaque salarié a droit
+      à un <strong>repos quotidien minimal de 11 heures consécutives</strong>. Les salariés qui
+      travaillent régulièrement de nuit bénéficient en plus d'un suivi médical renforcé.</div>
+      <p class="question">D'après ce document, entre deux services, Karim a droit à un repos quotidien minimum de :</p>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions"><button class="btn btn-primary" id="nextBtn" onclick="nextStage()" disabled>Voir la synthèse</button></div>
+    `,
+    options:[
+      {text:"8 heures", correct:false, explain:"Relisez le document : la durée minimale légale est plus longue."},
+      {text:"11 heures", correct:true, explain:"Exact : le document l'indique. Entre 1h et 7h, Karim ne bénéficie donc pas de ce repos minimal."},
+      {text:"24 heures", correct:false, explain:"Relisez le document : 24h correspond plutôt au repos hebdomadaire, pas au repos quotidien."}
+    ]
+  }
+];
+
+let current = 0;
+const results = {};
+
+function renderCarnet(){
+  const el = document.getElementById('carnet');
+  el.innerHTML = stages.map((s,i)=>{
+    let cls='etape';
+    if(i<current) cls+=' done';
+    else if(i===current) cls+=' active';
+    return `<div class="${cls}">${s.label}</div>`;
+  }).join('');
+}
+
+function renderStage(){
+  renderCarnet();
+  const stage = stages[current];
+  document.getElementById('panel').innerHTML = stage.render();
+
+  if(stage.options){
+    const optsEl = document.getElementById('opts');
+    optsEl.innerHTML = stage.options.map((o,i)=>
+      `<button class="opt-btn" onclick="chooseOption(${i})">${o.text}</button>`
+    ).join('');
+  }
+  if(stage.checks){
+    const checksEl = document.getElementById('checks');
+    checksEl.innerHTML = stage.checks.map((c,i)=>
+      `<label class="check-opt"><input type="checkbox" id="chk${i}"> <span>${c.text}</span></label>`
+    ).join('');
+  }
+  addBackButton();
+}
+
+function addBackButton(){
+  if(current === 0) return;
+  const actionsDiv = document.querySelector('.actions');
+  if(!actionsDiv) return;
+  const backBtn = document.createElement('button');
+  backBtn.className = 'btn btn-ghost';
+  backBtn.textContent = '◀ Revenir en arrière';
+  backBtn.onclick = prevStage;
+  actionsDiv.insertBefore(backBtn, actionsDiv.firstChild);
+}
+
+function prevStage(){
+  current--;
+  renderStage();
+}
+
+function chooseOption(i){
+  const stage = stages[current];
+  const buttons = document.querySelectorAll('#opts .opt-btn');
+  buttons.forEach(b=>b.disabled=true);
+  const chosen = stage.options[i];
+  buttons[i].classList.add(chosen.correct ? 'correct':'incorrect');
+  if(!chosen.correct){
+    const correctIdx = stage.options.findIndex(o=>o.correct);
+    buttons[correctIdx].classList.add('correct');
+  }
+  const fb = document.getElementById('fb');
+  fb.textContent = chosen.explain;
+  fb.className = 'feedback show ' + (chosen.correct ? 'ok':'ko');
+  results[stage.id] = chosen.correct;
+  if(stage.options2){
+    document.getElementById('q2block').style.display = 'block';
+    const opts2El = document.getElementById('opts2');
+    opts2El.innerHTML = stage.options2.map((o,i)=>
+      `<button class="opt-btn" onclick="chooseOption2(${i})">${o.text}</button>`
+    ).join('');
+  } else {
+    document.getElementById('nextBtn').disabled = false;
+  }
+}
+
+function chooseOption2(i){
+  const stage = stages[current];
+  const buttons = document.querySelectorAll('#opts2 .opt-btn');
+  buttons.forEach(b=>b.disabled=true);
+  const chosen = stage.options2[i];
+  buttons[i].classList.add(chosen.correct ? 'correct':'incorrect');
+  if(!chosen.correct){
+    const correctIdx = stage.options2.findIndex(o=>o.correct);
+    buttons[correctIdx].classList.add('correct');
+  }
+  const fb2 = document.getElementById('fb2');
+  fb2.textContent = chosen.explain;
+  fb2.className = 'feedback show ' + (chosen.correct ? 'ok':'ko');
+  results[stage.id] = results[stage.id] && chosen.correct;
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function validateChecks(){
+  const stage = stages[current];
+  let allCorrect = true;
+  stage.checks.forEach((c,i)=>{
+    const input = document.getElementById('chk'+i);
+    input.disabled = true;
+    const label = input.closest('.check-opt');
+    const isChecked = input.checked;
+    if(isChecked === c.correct){
+      if(c.correct){ label.style.borderColor='var(--good)'; label.style.background='var(--good-bg)'; }
+    } else {
+      allCorrect = false;
+      label.style.borderColor='var(--bad)';
+      label.style.background='var(--bad-bg)';
+    }
+    if(c.correct && !isChecked){ label.style.borderColor='var(--good)'; }
+  });
+  const fb = document.getElementById('fb');
+  fb.textContent = allCorrect
+    ? "Bonnes réponses : vous avez identifié les bons éléments."
+    : "Regardez les cases en vert : ce sont les bonnes réponses attendues.";
+  fb.className = 'feedback show ' + (allCorrect ? 'ok':'ko');
+  results[stage.id] = allCorrect;
+
+  const btn = document.querySelector('.actions .btn-primary');
+  btn.textContent = current === stages.length-1 ? "Voir la synthèse" : "Continuer";
+  btn.onclick = nextStage;
+  btn.disabled = false;
+}
+
+function nextStage(){
+  current++;
+  if(current >= stages.length){ renderFinal(); } else { renderStage(); }
+}
+
+function renderFinal(){
+  renderCarnet();
+  const validated = Object.values(results).filter(Boolean).length;
+  const total = Object.keys(results).length;
+  document.getElementById('panel').innerHTML = `
+    <p class="eyebrow">Synthèse de l'enquête</p>
+    <h2>Le carnet de Karim est complet</h2>
+    <p>Vous avez lu les documents, identifié la situation de Karim, analysé les causes et les
+    conséquences de sa désynchronisation, et proposé des mesures de prévention adaptées à son métier.</p>
+    <p><strong>${validated} / ${total}</strong> étapes validées du premier coup.</p>
+    <div class="final-grid">
+      <div class="final-card"><strong>C2</strong>Identifier un rythme biologique</div>
+      <div class="final-card"><strong>C3</strong>Repérer les facteurs et cycles</div>
+      <div class="final-card"><strong>C4</strong>Relier causes / conséquences</div>
+      <div class="final-card"><strong>C5</strong>Proposer des mesures</div>
+      <div class="final-card"><strong>C6</strong>Argumenter un droit</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="prevStage()">◀ Revenir en arrière</button>
+      <button class="btn btn-ghost" onclick="restart()">Recommencer l'enquête</button>
+    </div>
+  `;
+}
+
+function restart(){
+  current = 0;
+  for(const k in results) delete results[k];
+  renderStage();
+}
+
+renderStage();
+</script>
+</body>
+</html>
